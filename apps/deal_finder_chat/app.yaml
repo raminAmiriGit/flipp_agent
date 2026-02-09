@@ -1,0 +1,14 @@
+# Databricks App configuration for Flipp Deal-Finder Chat
+# Deploy via: databricks apps deploy . or Workspace UI
+name: flipp-deal-finder-chat
+description: Conversational deal-finding chatbot grounded in Flipp flyer content.
+url: /
+entrypoint: app.py
+resources:
+  - path: app.py
+  - path: backend_ka.py
+  - path: requirements.txt
+env:
+  # Set FLIPP_KA_ENDPOINT_NAME to the Knowledge Assistant serving endpoint name
+  # (from Agent Bricks after Step 3/4, e.g. ka-<tile_id>-endpoint)
+  FLIPP_KA_ENDPOINT_NAME: ""

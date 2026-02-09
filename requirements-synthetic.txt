@@ -1,0 +1,2 @@
+# For generating synthetic flyer PDFs locally
+reportlab>=4.0.0
