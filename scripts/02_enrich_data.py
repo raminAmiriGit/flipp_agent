@@ -34,6 +34,16 @@ from conf.catalog_config import (
     VOLUME_PATH_RAW,
     FULL_TABLE_DEALS,
     FULL_TABLE_RETAILERS,
+    FULL_TABLE_STORES,
+    FULL_TABLE_TRADE_AREAS,
+    FULL_TABLE_PRODUCTS,
+    FULL_TABLE_CATEGORIES,
+    FULL_TABLE_PRODUCT_RETAILER_MAP,
+    FULL_TABLE_USERS,
+    FULL_TABLE_SESSIONS,
+    FULL_TABLE_EVENTS,
+    FULL_TABLE_STORE_VISITS,
+    FULL_TABLE_CONVERSION_PROXIES,
 )
 
 
@@ -48,15 +58,28 @@ def main() -> None:
     spark.sql(f"CREATE VOLUME IF NOT EXISTS {CATALOG}.{SCHEMA}.{VOLUME_FLYER_DOCS}")
     print(f"  Volume {CATALOG}.{SCHEMA}.{VOLUME_FLYER_DOCS} ready for flyer PDFs.")
 
-    # Retailers dimension
-    retailers_df = spark.read.parquet(f"{VOLUME_PATH_RAW}/retailers")
-    retailers_df.write.mode("overwrite").saveAsTable(FULL_TABLE_RETAILERS)
-    print(f"  Wrote table {FULL_TABLE_RETAILERS}")
-
-    # Deals fact (with validity and category for filtering)
-    deals_df = spark.read.parquet(f"{VOLUME_PATH_RAW}/deals")
-    deals_df.write.mode("overwrite").saveAsTable(FULL_TABLE_DEALS)
-    print(f"  Wrote table {FULL_TABLE_DEALS}")
+    # Dimension and fact tables from raw parquet (see prompts/cursor_generatedata.md)
+    tables = [
+        ("retailers", FULL_TABLE_RETAILERS),
+        ("stores", FULL_TABLE_STORES),
+        ("trade_areas", FULL_TABLE_TRADE_AREAS),
+        ("categories", FULL_TABLE_CATEGORIES),
+        ("products", FULL_TABLE_PRODUCTS),
+        ("product_retailer_map", FULL_TABLE_PRODUCT_RETAILER_MAP),
+        ("users", FULL_TABLE_USERS),
+        ("sessions", FULL_TABLE_SESSIONS),
+        ("events", FULL_TABLE_EVENTS),
+        ("store_visits", FULL_TABLE_STORE_VISITS),
+        ("conversion_proxies", FULL_TABLE_CONVERSION_PROXIES),
+        ("deals", FULL_TABLE_DEALS),
+    ]
+    for path_suffix, full_table in tables:
+        try:
+            df = spark.read.parquet(f"{VOLUME_PATH_RAW}/{path_suffix}")
+            df.write.mode("overwrite").saveAsTable(full_table)
+            print(f"  Wrote table {full_table}")
+        except Exception as e:
+            print(f"  Skip {full_table}: {e}")
 
     print("\nStep 2a done. Next: run 02_upload_flyer_docs.py (local) to upload PDFs to Volume, then Step 3.")
 
