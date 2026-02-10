@@ -14,9 +14,16 @@ import sys
 from pathlib import Path
 
 # Add project root for config
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+# PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# Add project root for config (Databricks notebook-safe)
+from pathlib import Path
+import sys
+
+# Add project root for config (Databricks notebook-safe)
+SCRIPT_DIR = Path.cwd()
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+PROJECT_ROOT = SCRIPT_DIR.parent
 
 from conf.catalog_config import CATALOG, SCHEMA, VOLUME_RAW, VOLUME_PATH_RAW
 
@@ -71,7 +78,14 @@ def get_spark() -> SparkSession:
 
 
 def create_infrastructure(spark: SparkSession) -> None:
-    spark.sql(f"CREATE CATALOG IF NOT EXISTS {CATALOG}")
+    # Check if catalog exists, if not provide helpful error
+    catalogs = [row.catalog for row in spark.sql("SHOW CATALOGS").collect()]
+    if CATALOG not in catalogs:
+        raise ValueError(
+            f"Catalog '{CATALOG}' does not exist. Please create it first using the Databricks UI "
+            f"(Catalog > Create Catalog) or SQL: CREATE CATALOG {CATALOG};"
+        )
+    
     spark.sql(f"CREATE SCHEMA IF NOT EXISTS {CATALOG}.{SCHEMA}")
     spark.sql(f"CREATE VOLUME IF NOT EXISTS {CATALOG}.{SCHEMA}.{VOLUME_RAW}")
 

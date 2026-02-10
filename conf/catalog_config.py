@@ -5,7 +5,7 @@ Edit these for your workspace or set via environment variables.
 import os
 
 # Unity Catalog
-CATALOG = os.environ.get("FLIPP_CATALOG", "flipp_demo")
+CATALOG = os.environ.get("FLIPP_CATALOG", "ramin_serverless_aws_catalog")
 SCHEMA = os.environ.get("FLIPP_SCHEMA", "deal_finder")
 
 # Volume names
@@ -23,7 +23,7 @@ FULL_TABLE_DEALS = f"{CATALOG}.{SCHEMA}.{TABLE_DEALS}"
 FULL_TABLE_RETAILERS = f"{CATALOG}.{SCHEMA}.{TABLE_RETAILERS}"
 
 # Agent Bricks
-KA_NAME = "Flipp_Deal_Finder"
+KA_NAME = "flipp-knowledge-assistant-2026-02-10"
 GENIE_NAME = "Flipp_Deals_Explorer"
 MAS_NAME = "Flipp_Deal_Supervisor"
 

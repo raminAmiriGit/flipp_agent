@@ -30,7 +30,14 @@ from reportlab.platypus import (
 # -----------------------------------------------------------------------------
 # CONFIGURATION
 # -----------------------------------------------------------------------------
-SCRIPT_DIR = Path(__file__).resolve().parent
+# SCRIPT_DIR = Path(__file__).resolve().parent
+from pathlib import Path
+import sys
+
+# Add project root for config (Databricks notebook-safe)
+SCRIPT_DIR = Path.cwd()
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
 PROJECT_ROOT = SCRIPT_DIR.parent
 OUTPUT_DIR = PROJECT_ROOT / "data" / "flyers"
 TABLE_DIR = OUTPUT_DIR / "table_style"

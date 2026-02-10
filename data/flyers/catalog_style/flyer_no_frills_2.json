@@ -1,0 +1,9 @@
+{
+  "title": "FLYER DEALS",
+  "retailer": "No Frills",
+  "valid_from": "February 7, 2026",
+  "valid_to": "February 13, 2026",
+  "pdf_path": "/Workspace/Users/ramin.amiri@databricks.com/flipp_agent/data/flyers/catalog_style/flyer_no_frills_2.pdf",
+  "question": "Are there any halal meat deals?",
+  "guideline": "Mention Halal products (e.g. chicken wings, beef burger, frankfurters) with retailer and price."
+}
