@@ -320,7 +320,7 @@ def generate_events(
     for i in range(N_EVENTS):
         s = np.random.choice(sessions_list)
         ts = datetime.strptime(s["ts_start"], "%Y-%m-%d %H:%M:%S") + timedelta(seconds=np.random.randint(0, 1800))
-        event_type = np.random.choice(EVENT_TYPES, p=[0.25, 0.3, 0.15, 0.1, 0.05, 0.05, 0.05])
+        event_type = np.random.choice(EVENT_TYPES, p=[0.25, 0.3, 0.15, 0.1, 0.05, 0.05, 0.1])
         rows.append({
             "event_id": f"evt_{i:010d}",
             "ts": ts.strftime("%Y-%m-%d %H:%M:%S"),
