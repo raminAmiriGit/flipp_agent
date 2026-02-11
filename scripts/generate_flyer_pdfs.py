@@ -85,7 +85,10 @@ PRODUCTS = [
     ("Jarritos Soft Drink", "Jarritos", "$1.99", "$2.49", "Beverages", "370 ml", "selected varieties"),
 ]
 
-# Example question/guideline pairs for Knowledge Assistant (one JSON per flyer)
+# Example question/guideline pairs for Knowledge Assistant (human-labeled examples).
+# When PDFs and these JSONs are uploaded to the flyer_docs Volume, the KA (with
+# add_examples_from_volume=true) automatically ingests them: each JSON must have
+# "question" and "guideline" keys to improve answer accuracy.
 FLYER_QA_EXAMPLES = [
     {
         "question": "What chicken or poultry deals are in the flyer?",
@@ -258,7 +261,8 @@ def main() -> None:
         build_catalog_flyer(meta, catalog_path)
         print(f"Wrote catalog flyer: {catalog_path}")
 
-        # Write JSON example file for Knowledge Assistant (same base name, .json)
+        # Write JSON example file for Knowledge Assistant (same base name, .json).
+        # Required keys for KA examples: "question", "guideline". Optional: title, retailer, pdf_path, etc.
         for subdir, path in [(TABLE_DIR, table_path), (CATALOG_DIR, catalog_path)]:
             json_path = path.with_suffix(".json")
             doc_meta = {

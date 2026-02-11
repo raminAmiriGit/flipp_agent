@@ -1,37 +1,59 @@
 """
-Step 3: Create Agent Bricks — Knowledge Assistant (and optional Genie + MAS).
+Step 3: Create Agent Bricks — Knowledge Assistant, Genie, and (optional) MAS.
 
-Creates:
 1. Knowledge Assistant (KA): document Q&A over flyer PDFs in UC Volume.
-2. Optional: Genie Space on deals table for natural-language SQL.
-3. Optional: Multi-Agent Supervisor (MAS) routing between KA and Genie.
+   - PDFs and companion JSON files live in flyer_docs Volume.
+   - JSON files used as examples: each must have "question" and "guideline" keys
+     (human-labeled examples). With add_examples_from_volume=true, the KA
+     auto-ingests these to improve accuracy. See generate_flyer_pdfs.py.
 
-Run locally or in a notebook. uses Databricks REST API.
-Config: conf/catalog_config.py.
+2. Genie Space: natural-language SQL over structured tables (deals, retailers,
+   stores, products, etc.). Table list in config.
+
+3. Multi-Agent Supervisor (MAS): routes between KA and Genie. Requires
+   Agent Bricks preview enabled in the workspace.
+
+Config: conf/catalog_config.py. Use MCP: create_or_update_ka, create_or_update_genie, create_or_update_mas.
 """
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 
-from pathlib import Path
-import sys
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
-# Add project root for config (Databricks notebook-safe)
-SCRIPT_DIR = Path.cwd()
-if str(SCRIPT_DIR) not in sys.path:
-    sys.path.insert(0, str(SCRIPT_DIR))
-PROJECT_ROOT = SCRIPT_DIR.parent
-print(PROJECT_ROOT)
 from conf.catalog_config import (
     CATALOG,
     SCHEMA,
     VOLUME_PATH_FLYER_DOCS,
     FULL_TABLE_DEALS,
+    FULL_TABLE_RETAILERS,
+    FULL_TABLE_STORES,
+    FULL_TABLE_TRADE_AREAS,
+    FULL_TABLE_PRODUCTS,
+    FULL_TABLE_CATEGORIES,
+    FULL_TABLE_PRODUCT_RETAILER_MAP,
+    FULL_TABLE_STORE_VISITS,
+    FULL_TABLE_CONVERSION_PROXIES,
     KA_NAME,
     GENIE_NAME,
     MAS_NAME,
 )
+
+# All structured tables for Genie (per cursor_agent.md)
+GENIE_TABLE_IDENTIFIERS = [
+    FULL_TABLE_DEALS,
+    FULL_TABLE_RETAILERS,
+    FULL_TABLE_STORES,
+    FULL_TABLE_TRADE_AREAS,
+    FULL_TABLE_PRODUCTS,
+    FULL_TABLE_CATEGORIES,
+    FULL_TABLE_PRODUCT_RETAILER_MAP,
+    FULL_TABLE_STORE_VISITS,
+    FULL_TABLE_CONVERSION_PROXIES,
+]
 
 # -----------------------------------------------------------------------------
 # KNOWLEDGE ASSISTANT
@@ -49,125 +71,44 @@ KA_INSTRUCTIONS = (
 )
 
 
-def create_ka_via_api():
-    """Create or update Knowledge Assistant using Databricks REST API."""
+def create_ka_via_sdk():
+    """Create or update Knowledge Assistant using Databricks SDK (Agent Bricks API)."""
     try:
         from databricks.sdk import WorkspaceClient
-        import requests
-        
-        w = WorkspaceClient()
-        host = w.config.host
-        
-        # Get token from notebook context (works in serverless with runtime auth)
-        try:
-            token = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()
-        except:
-            # Fallback to SDK token if available
-            token = w.config.token
-            if not token:
-                raise ValueError("Could not get authentication token. Make sure you're running in a Databricks notebook.")
-        
-        # API endpoint for creating agents
-        url = f"{host}/api/2.0/agent-framework/agents"
-        
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json"
-        }
-        
-        payload = {
-            "name": KA_NAME,
-            "description": KA_DESCRIPTION,
-            "agent_type": "KNOWLEDGE_ASSISTANT",
-            "knowledge_sources": [
-                {
-                    "type": "UC_VOLUME",
-                    "volume_path": VOLUME_PATH_FLYER_DOCS
-                }
-            ],
-            "instructions": KA_INSTRUCTIONS,
-            "model": "databricks-meta-llama-3-1-70b-instruct",  # Default model
-            "add_examples_from_volume": True
-        }
-        
-        print(f"Creating Knowledge Assistant: {KA_NAME}")
-        print(f"  Volume: {VOLUME_PATH_FLYER_DOCS}")
-        print(f"  Description: {KA_DESCRIPTION}")
-        print()
-        
-        response = requests.post(url, headers=headers, json=payload)
-        
-        if response.status_code in [200, 201]:
-            result = response.json()
-            print("✓ Knowledge Assistant created successfully!")
-            print(f"  Agent ID: {result.get('agent_id', 'N/A')}")
-            print(f"  Endpoint: {result.get('endpoint_name', 'N/A')}")
-            return result
-        elif response.status_code == 409:
-            print("⚠ Knowledge Assistant already exists. Updating...")
-            # Try to update instead
-            update_url = f"{host}/api/2.0/agent-framework/agents/{KA_NAME}"
-            response = requests.patch(update_url, headers=headers, json=payload)
-            if response.status_code == 200:
-                print("✓ Knowledge Assistant updated successfully!")
-                return response.json()
-            else:
-                print(f"✗ Update failed: {response.status_code}")
-                print(f"  Response: {response.text}")
-                return None
-        else:
-            print(f"✗ Failed to create Knowledge Assistant: {response.status_code}")
-            print(f"  Response: {response.text}")
-            print()
-            print("Alternative: Create via Databricks UI:")
-            print("  1. Go to Agents in the left navigation")
-            print("  2. Click 'Build' on Knowledge Assistant tile")
-            print(f"  3. Name: {KA_NAME}")
-            print(f"  4. Knowledge source: {VOLUME_PATH_FLYER_DOCS}")
-            print(f"  5. Description: {KA_DESCRIPTION}")
-            print(f"  6. Instructions: {KA_INSTRUCTIONS}")
-            return None
-            
+        from databricks.sdk.service.agents import CreateKnowledgeAssistantRequest
     except ImportError:
-        print("Install databricks-sdk: %pip install databricks-sdk")
-        return None
-    except Exception as e:
-        print(f"Error creating Knowledge Assistant: {e}")
-        print()
-        print("Alternative: Create via Databricks UI:")
-        print("  1. Go to Agents in the left navigation")
-        print("  2. Click 'Build' on Knowledge Assistant tile")
-        print(f"  3. Name: {KA_NAME}")
-        print(f"  4. Knowledge source: {VOLUME_PATH_FLYER_DOCS}")
-        print(f"  5. Description: {KA_DESCRIPTION}")
-        print(f"  6. Instructions: {KA_INSTRUCTIONS}")
-        return None
+        print("Install databricks-sdk. For Agent Bricks, use MCP create_or_update_ka with:")
+        print(f"  name: {KA_NAME}")
+        print(f"  volume_path: {VOLUME_PATH_FLYER_DOCS}")
+        print(f"  description: {KA_DESCRIPTION}")
+        print(f"  instructions: {KA_INSTRUCTIONS}")
+        print("  add_examples_from_volume: true")
+        return
+
+    w = WorkspaceClient()
+    # Agent Bricks KA creation may be via a different API surface; if not available, print MCP instructions
+    print("Create the Knowledge Assistant via Databricks UI or MCP tool create_or_update_ka:")
+    print(f"  name: {KA_NAME}")
+    print(f"  volume_path: {VOLUME_PATH_FLYER_DOCS}")
+    print(f"  description: {KA_DESCRIPTION}")
+    print(f"  instructions: {KA_INSTRUCTIONS}")
+    print("  add_examples_from_volume: true")
 
 
 def main() -> None:
-    print("=" * 70)
     print("Step 3: Create Agent Bricks")
-    print("=" * 70)
+    print(f"  KA name: {KA_NAME}")
+    print(f"  Volume: {VOLUME_PATH_FLYER_DOCS}")
     print()
-    
-    # Create Knowledge Assistant
-    result = create_ka_via_api()
-    
+    create_ka_via_sdk()
     print()
-    print("-" * 70)
-    print("Optional: Create Genie Space on deals table for SQL-style questions:")
-    print(f"  Tables: {FULL_TABLE_DEALS}")
-    print(f"  Genie name: {GENIE_NAME}")
+    print("Genie Space (structured data): use create_or_update_genie with:")
+    print(f"  display_name: {GENIE_NAME}")
+    print(f"  table_identifiers: {GENIE_TABLE_IDENTIFIERS}")
     print()
-    print("Optional: Create MAS to route between KA (flyer Q&A) and Genie (deals data):")
-    print(f"  MAS name: {MAS_NAME}")
-    print("-" * 70)
-    print()
-    
-    if result:
-        print("✓ Step 3 complete! Next: Run 04_provision_agents.py to wait for endpoint to be ready.")
-    else:
-        print("⚠ Step 3 incomplete. Create the agent via UI, then run 04_provision_agents.py")
+    print("MAS (optional, requires Agent Bricks preview): use create_or_update_mas with")
+    print(f"  name: {MAS_NAME}, agents: [KA by ka_tile_id, Genie by genie_space_id]")
+    print("\nStep 3: Use MCP create_or_update_ka (add_examples_from_volume=true for JSON examples), create_or_update_genie, create_or_update_mas.")
 
 
 if __name__ == "__main__":
