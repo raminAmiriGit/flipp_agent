@@ -66,6 +66,17 @@ st.divider()
 if st.session_state.page == "Home":
     st.markdown("## Welcome to Flipp Deal-Finder")
     st.markdown("Find the best deals and coupons. Use **AI Assistant** to ask questions, or browse **Flyers**.")
+
+    # Flyer example images (medium size, non-clickable)
+    app_dir = Path(__file__).resolve().parent
+    flyer_images = [app_dir / "flyer1.jpeg", app_dir / "flyer2.jpeg"]
+    if all(p.exists() for p in flyer_images):
+        c1, c2 = st.columns(2)
+        with c1:
+            st.image(str(flyer_images[0]), use_container_width=True, caption="Weekly flyer example")
+        with c2:
+            st.image(str(flyer_images[1]), use_container_width=True, caption="Weekly flyer example")
+
     st.info("👆 Go to **AI Assistant** to chat with the deal-finder agent.")
     if st.button("✨ Ask Flipp", key="home_ask"):
         st.session_state.page = "AI Assistant"
