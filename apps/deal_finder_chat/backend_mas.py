@@ -45,6 +45,50 @@ def find_mas_endpoint() -> str:
     return ""
 
 
+def is_tool_call(obj: Any) -> bool:
+    """Check if an object is a tool call (not user-facing text)."""
+    if obj is None:
+        return False
+    # Check for tool call attributes
+    obj_type = type(obj).__name__
+    if "ToolCall" in obj_type or "FunctionCall" in obj_type:
+        return True
+    # Check for tool_calls attribute
+    if hasattr(obj, "tool_calls") and obj.tool_calls:
+        return True
+    # Check for type field indicating function_call
+    if hasattr(obj, "type") and obj.type == "function_call":
+        return True
+    return False
+
+
+def extract_text_from_content(content_block: Any) -> str:
+    """Extract text from a content block, filtering out tool calls."""
+    if content_block is None:
+        return ""
+    
+    # If it's a tool call, skip it
+    if is_tool_call(content_block):
+        return ""
+    
+    # If it has a text attribute, use it
+    if hasattr(content_block, "text") and content_block.text:
+        return str(content_block.text)
+    
+    # If it's a dict with text key
+    if isinstance(content_block, dict):
+        if "text" in content_block:
+            return str(content_block.get("text", ""))
+        if "content" in content_block:
+            return str(content_block.get("content", ""))
+    
+    # If it's a string, return it
+    if isinstance(content_block, str):
+        return content_block
+    
+    return ""
+
+
 def extract_supervisor_response(content: str, supervisor_name: str | None = None) -> str:
     """
     Extract only the supervisor's final answer from MAS output.
@@ -52,25 +96,61 @@ def extract_supervisor_response(content: str, supervisor_name: str | None = None
     MAS returns multiple agents' output (e.g. Genie table + supervisor summary).
     We look for <name>SupervisorName</name> and return the text after it so the
     app shows only the supervisor's reply, not tool calls or sub-agent output.
+    
+    Also filters out lines that look like tool calls or error messages.
     """
     if not content:
         return content
+    
+    # First, try to find the supervisor's response by name tag
     name = (supervisor_name or MAS_NAME or "").strip()
-    if not name:
-        return content
-    tag = f"<name>{re.escape(name)}</name>"
-    idx = content.find(tag)
-    tag_len = len(tag)
-    if idx == -1:
-        tag_ci = f"<name>{name.lower()}</name>"
-        idx = content.lower().find(tag_ci)
-        tag_len = len(tag_ci)
-    if idx < 0:
-        return content
-    result = content[idx + tag_len :].strip()
-    if result:
-        logger.debug("Extracted supervisor response len=%d", len(result))
-    return result
+    if name:
+        tag = f"<name>{re.escape(name)}</name>"
+        idx = content.find(tag)
+        tag_len = len(tag)
+        if idx == -1:
+            tag_ci = f"<name>{name.lower()}</name>"
+            idx = content.lower().find(tag_ci)
+            tag_len = len(tag_ci)
+        if idx >= 0:
+            result = content[idx + tag_len :].strip()
+            if result:
+                logger.debug("Extracted supervisor response by name tag, len=%d", len(result))
+                return result
+    
+    # If no name tag found, filter out tool calls and intermediate steps
+    lines = content.split("\n")
+    filtered_lines = []
+    
+    for line in lines:
+        line_stripped = line.strip()
+        # Skip empty lines
+        if not line_stripped:
+            continue
+        # Skip lines that look like tool calls
+        if "ResponseFunctionToolCall" in line_stripped:
+            continue
+        if "function_call" in line_stripped and ("arguments=" in line_stripped or "call_id=" in line_stripped):
+            continue
+        # Skip name tags for sub-agents
+        if line_stripped.startswith("<name>") and line_stripped.endswith("</name>"):
+            agent_name = line_stripped[6:-7]
+            # Keep supervisor name tags, skip others
+            if name and agent_name.lower() != name.lower():
+                continue
+        # Skip error messages from sub-agents
+        if "query failed with error:" in line_stripped.lower():
+            continue
+        if "UNRESOLVED_ROUTINE" in line_stripped or "SQLSTATE:" in line_stripped:
+            continue
+        
+        filtered_lines.append(line)
+    
+    result = "\n".join(filtered_lines).strip()
+    if result and result != content:
+        logger.debug("Filtered content, original_len=%d, filtered_len=%d", len(content), len(result))
+    
+    return result if result else content
 
 
 def query_mas(
@@ -138,19 +218,30 @@ def query_mas(
             if isinstance(out, list) and len(out) > 0:
                 all_text_parts = []
                 for msg in out:
+                    # Skip tool calls entirely
+                    if is_tool_call(msg):
+                        logger.debug("Skipping tool call message")
+                        continue
+                    
                     if isinstance(msg, dict):
-                        all_text_parts.append(msg.get("content", msg.get("text", "")))
+                        text = msg.get("content", msg.get("text", ""))
+                        if text:
+                            all_text_parts.append(text)
                     elif hasattr(msg, "content") and msg.content:
-                        for block in msg.content if isinstance(msg.content, list) else [msg.content]:
-                            if hasattr(block, "text") and block.text:
-                                all_text_parts.append(block.text)
-                            elif isinstance(block, dict):
-                                all_text_parts.append(block.get("text", ""))
-                    else:
-                        all_text_parts.append(str(msg))
+                        # Handle content that might be a list of blocks
+                        content_blocks = msg.content if isinstance(msg.content, list) else [msg.content]
+                        for block in content_blocks:
+                            text = extract_text_from_content(block)
+                            if text:
+                                all_text_parts.append(text)
+                    elif isinstance(msg, str):
+                        all_text_parts.append(msg)
+                    # Skip converting unknown objects to strings - they're likely tool calls
+                
                 content = "\n\n".join(p for p in all_text_parts if p).strip()
                 if len(out) > 1:
-                    logger.debug("MAS output messages count=%d, combined content_len=%d", len(out), len(content))
+                    logger.debug("MAS output messages count=%d, text_parts=%d, combined_len=%d", 
+                               len(out), len(all_text_parts), len(content))
             elif isinstance(out, str):
                 content = out
         if not content and getattr(response, "choices", None) and len(response.choices) > 0:

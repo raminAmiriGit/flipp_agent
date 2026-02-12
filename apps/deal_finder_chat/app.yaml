@@ -1,17 +1,14 @@
 # Databricks App configuration for Flipp Deal-Finder
-# Deploy: databricks apps deploy .  (from this folder or with --source-code-path)
-# MAS name from conf/catalog_config.py (MAS_NAME). Endpoint resolved at runtime or set below.
 name: flipp-deal-finder-chat
 description: Flipp Deal-Finder — chatbot for deals and coupons. Talks to the Multi-Agent Supervisor (MAS).
-url: /
-entrypoint: app.py
-resources:
-  - path: app.py
-  - path: config.py
-  - path: backend_mas.py
-  - path: requirements.txt
+command:
+  - streamlit
+  - run
+  - app.py
+  # - --server.port=8501
+  # - --server.address=0.0.0.0
 env:
-  # Optional: set to the MAS serving endpoint name (e.g. mas-682564f5-endpoint) to skip discovery
-  FLIPP_MAS_ENDPOINT_NAME: ""
-  # MAS agent name in workspace (used to discover endpoint if FLIPP_MAS_ENDPOINT_NAME not set)
-  FLIPP_MAS_NAME: "Flipp_Deal_Supervisor"
+  - name: FLIPP_MAS_ENDPOINT_NAME
+    value: ""
+  - name: FLIPP_MAS_NAME
+    value: "Flipp_Deal_Supervisor"
