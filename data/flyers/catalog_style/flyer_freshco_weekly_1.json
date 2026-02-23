@@ -3,7 +3,7 @@
   "retailer": "FreshCo Weekly",
   "valid_from": "February 6, 2026",
   "valid_to": "February 12, 2026",
-  "pdf_path": "/Workspace/Users/ramin.amiri@databricks.com/flipp_agent/data/flyers/catalog_style/flyer_freshco_weekly_1.pdf",
+  "pdf_path": "/Users/ramin.amiri/Code/flipp_agent/data/flyers/catalog_style/flyer_freshco_weekly_1.pdf",
   "question": "I'm hosting a barbecue for 10 people \u2014 what are the best deals?",
   "guideline": "Recommend wings, burgers, buns, condiments, chips, and drinks from the flyer with prices and validity dates."
 }

@@ -10,3 +10,10 @@
 */*/*/*/*/*/*/*/.DS_Store
 */*/*/*/*/*/*/*/*/.DS_Store
 */*/*/*/*/*/*/*/*/*/.DS_Store
+.venv
+.venv311
+.venv312
+# I still see .DS_Store in my git status command. I want it to get ignored. also want to remove everything that has __pycache__ in it. It can be in the middle or the last or start of the path.
+*.pyc
+__pycache__/
+.DS_Store

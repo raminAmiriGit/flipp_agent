@@ -3,7 +3,7 @@
   "retailer": "Metro Plus",
   "valid_from": "February 5, 2026",
   "valid_to": "February 11, 2026",
-  "pdf_path": "/Workspace/Users/ramin.amiri@databricks.com/flipp_agent/data/flyers/catalog_style/flyer_metro_plus_0.pdf",
+  "pdf_path": "/Users/ramin.amiri/Code/flipp_agent/data/flyers/catalog_style/flyer_metro_plus_0.pdf",
   "question": "What chicken or poultry deals are in the flyer?",
   "guideline": "Answer should list chicken wings, marinated chicken, beef burger, or other meat/poultry items with prices and cite this flyer."
 }

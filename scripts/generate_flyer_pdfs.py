@@ -67,22 +67,51 @@ FLYER_META = [
 
 # Product rows: (product_name, brand, price_display, was_price, category, unit, attributes)
 PRODUCTS = [
+    # Meat & Poultry
     ("Marinated Chicken Wings", "Adonis", "$5.99/lb", "$7.49/lb", "Meat & Poultry", "per lb", "Halal, Original Recipe"),
     ("Chicken Wings 908g", "Maple Lodge Zabiha Halal", "$14.99", "$17.99", "Meat & Poultry", "908 g", "Halal, selected varieties"),
+    ("Supreme Frankfurters", "Zabiha Halal", "$6.99", "$8.49", "Deli", "900 g", "Halal, Juicy or Spicy"),
+    ("Beef Burger", "Al Safa", "$12.49", "$14.99", "Meat & Poultry", "800 g", "Halal"),
+    # Frozen & Bakery
     ("Börek Twist Meat Phyllo Pie", "Börek", "$14.99", "$18.49", "Frozen", "908 g", "Halal"),
     ("French Fries", "Selection", "$4.99", "$6.49", "Frozen", "2 kg", "selected varieties"),
     ("Sliced Breads or Buns", "Villaggio", "2/$6", "2/$8", "Bakery", "650-675 g", "6 ct"),
-    ("Supreme Frankfurters", "Zabiha Halal", "$6.99", "$8.49", "Deli", "900 g", "Halal, Juicy or Spicy"),
-    ("Beef Burger", "Al Safa", "$12.49", "$14.99", "Meat & Poultry", "800 g", "Halal"),
+    ("Appetizers", "Irrésistible", "$5.99", "$7.49", "Frozen", "228-493 g", "selected varieties"),
+    # Pantry & Snacks
     ("Condiment Pack", "Heinz", "$7.49", "$9.99", "Pantry", "3x375 ml", "Mustard, Relish, Ketchup"),
     ("Pita Chips", "Adonis", "$3.49", "$4.29", "Snacks", "225 g", "selected varieties"),
     ("Dips Hummus", "Adonis", "$3.99", "$4.99", "Dairy & Deli", "250 g", "selected varieties"),
     ("Tostitos Chips or Dips", "Tostitos", "2/$9", "2/$11", "Snacks", "215-295 g", "selected varieties"),
     ("Lay's Chips", "Lay's", "2/$8", "2/$10", "Snacks", "177-235 g", "selected varieties"),
-    ("Appetizers", "Irrésistible", "$5.99", "$7.49", "Frozen", "228-493 g", "selected varieties"),
     ("Guacamole Tortilla Chips", "Guacachip", "$4.99", "$5.99", "Snacks", "284 g", "selected varieties"),
     ("Chips", "Selection", "$1.49", "—", "Snacks", "200 g", "Everyday Low Price"),
     ("Jarritos Soft Drink", "Jarritos", "$1.99", "$2.49", "Beverages", "370 ml", "selected varieties"),
+    # Produce — vegetables
+    ("Broccoli Crowns", "Fresh Farms", "$1.99", "$2.79", "Produce", "per lb", "fresh"),
+    ("Baby Carrots", "Bunch O' Carrots", "2/$4", "2/$5.50", "Produce", "1 lb bag", "washed, ready to eat"),
+    ("Spinach", "Nature's Greens", "$2.49", "$3.29", "Produce", "284 g", "baby or bunch"),
+    ("Bell Peppers", "Farm Fresh", "3/$4", "3/$5.49", "Produce", "each", "red, green, yellow"),
+    ("Romaine Lettuce", "Garden Select", "$1.79", "$2.49", "Produce", "3-pack", "hearts"),
+    ("Cucumber", "Green Valley", "$0.99", "$1.29", "Produce", "each", "field or English"),
+    ("Zucchini", "Local Growers", "$1.49/lb", "$1.99/lb", "Produce", "per lb", "fresh"),
+    ("Cauliflower", "Fresh Farms", "$2.99", "$3.99", "Produce", "each", "medium head"),
+    ("Green Beans", "Selection", "$2.49", "$3.29", "Produce", "454 g", "trimmed"),
+    ("Tomatoes on the Vine", "Nature's Pick", "$2.99", "$3.99", "Produce", "per lb", "vine-ripened"),
+    ("Yellow Onions", "No Name", "2/$3", "2/$4", "Produce", "3 lb bag", "cooking"),
+    ("Russet Potatoes", "Farm to Table", "$4.99", "$6.49", "Produce", "10 lb bag", "baking"),
+    ("Celery", "Fresh Farms", "$1.99", "$2.49", "Produce", "bunch", "crisp"),
+    ("Mushrooms", "Selection", "$2.99", "$3.79", "Produce", "227 g", "white or cremini"),
+    ("Kale", "Nature's Greens", "$1.79", "$2.29", "Produce", "bunch", "curly or Lacinato"),
+    ("Sweet Corn", "Local Growers", "4/$3", "4/$4", "Produce", "each", "in husk"),
+    # Other foods (dairy, fruit, pantry)
+    ("Milk 2%", "Dairy Best", "$4.99", "$5.79", "Dairy", "2 L", "2% or skim"),
+    ("Greek Yogurt", "Oikos", "2/$6", "2/$7.50", "Dairy", "4x100 g", "plain or vanilla"),
+    ("Butter", "Selection", "$4.49", "$5.49", "Dairy", "454 g", "salted or unsalted"),
+    ("Eggs Large", "Farm Fresh", "$3.99", "$4.99", "Dairy", "12 ct", "Grade A"),
+    ("Bananas", "Chiquita", "$0.69/lb", "$0.89/lb", "Produce", "per lb", "ripe"),
+    ("Apples Gala", "Washington", "$1.49/lb", "$1.99/lb", "Produce", "per lb", "bag or loose"),
+    ("Pasta", "Italiano", "$1.29", "$1.69", "Pantry", "500 g", "spaghetti or penne"),
+    ("Canned Beans", "Selection", "$0.99", "$1.29", "Pantry", "540 ml", "kidney, black, chickpea"),
 ]
 
 # Example question/guideline pairs for Knowledge Assistant (human-labeled examples).
@@ -105,6 +134,14 @@ FLYER_QA_EXAMPLES = [
     {
         "question": "What snacks and chips are on sale?",
         "guideline": "List chips, dips, hummus, and snack deals with prices and cite the flyer.",
+    },
+    {
+        "question": "What vegetables or produce are on sale?",
+        "guideline": "List vegetable and produce deals (e.g. broccoli, carrots, spinach, peppers, lettuce, cucumber, zucchini, cauliflower, green beans, tomatoes, onions, potatoes, celery, mushrooms, kale, corn) with prices, units, and validity; cite this flyer.",
+    },
+    {
+        "question": "Are there any deals on fresh vegetables?",
+        "guideline": "List fresh vegetable deals from the flyer with price and was-price or discount; include retailer and valid dates.",
     },
 ]
 
