@@ -17,3 +17,6 @@
 *.pyc
 __pycache__/
 .DS_Store
+# Custom KA notebook artifacts
+chroma_flyers/
+mlruns/

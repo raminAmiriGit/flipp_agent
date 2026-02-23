@@ -1,0 +1,9 @@
+# Dependencies for custom Knowledge Assistant notebook (LangChain + OpenAI + MLflow).
+# Install: pip install -r notebooks/requirements-custom-ka.txt
+langchain>=0.3.0
+langchain-openai>=0.2.0
+langchain-community>=0.3.0
+pypdf>=4.0.0
+chromadb>=0.4.0
+mlflow[genai]>=2.14.0
+openai>=1.0.0
